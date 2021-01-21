@@ -8,7 +8,6 @@
 setwd(githubdir)
 setwd("ireland")
 
-
 ## Load Data 
 load("data/nireland.rdata")
 
