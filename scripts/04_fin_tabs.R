@@ -14,6 +14,7 @@ library(goji)
 library(mediation)
 library(coda)
 library(lme4)
+library(rstanarm)
 
 # Sourcing Common Functions
 source("scripts/00_func.R")
@@ -481,34 +482,34 @@ irelong2 <- reshape(data=iresub,  idvar="cserial", varying=list(t3qs), v.names=c
 #recast(iresub, measure.var=t2cg, time ~ variable)
 
 # Comparing T2 P with T3 CG
-t2mod1   <- glmer(t2 ~ controlpart + female + t2cgknow + ppeduc + cathprot + (1|cserial) + (1|time), data=irelong1)
+t2mod1   <- lmer(t2 ~ controlpart + female + t2cgknow + ppeduc + cathprot + (1|cserial) + (1|time), data=irelong1)
 t2mod2a  <- glmer(t2 ~ controlpart*time + female + t2cgknow + ppeduc + cathprot + (1|cserial) + (1|time), data=irelong1, family=poisson(link=log))
 t2mod2b  <- glmer(t2tot ~ controlpart + female + t2cgknow + ppeduc + cathprot + (1|grp), data=nireland, family=poisson(link=log))
+stan_lmer(t2tot ~ controlpart + female + t2cgknow + ppeduc + cathprot + (1|grp), data=nireland)
 
 # TABLE 4 (part a)
-t2mod3   <- glmer(t2 ~ controlpart*time + female + controlpart*t2cgknow + ppeduc + controlpart*cathprot + (1|cserial) + (1|time), data=irelong1)
+t2mod3   <- lmer(t2 ~ controlpart*time + female + controlpart*t2cgknow + ppeduc + controlpart*cathprot + (1|cserial) + (1|time), data=irelong1)
 confint(t2mod3)
 
-t2mod4a  <- glmer(t2 ~ time + female + t2cgknow + ppeduc +cathprot + (1|cserial) + (1|time) + (1|grp), data=irelong1)
-t2mod4b  <- glmer(t2 ~ time + female + t2cgknow + ppeduc +cathprot + (1|cserial) + (1|time), data=irelong1[is.na(irelong1$grp),])
+t2mod4a  <- lmer(t2 ~ time + female + t2cgknow + ppeduc +cathprot + (1|cserial) + (1|time) + (1|grp), data=irelong1)
+t2mod4b  <- lmer(t2 ~ time + female + t2cgknow + ppeduc +cathprot + (1|cserial) + (1|time), data=irelong1[is.na(irelong1$grp),])
 
 confint(t2mod4a)
 confint(t2mod4b)
 
 # Comparing T3 P with T3 CG
-t3mod1  <- glmer(t3 ~ I(t3controlpart==0) + female + t2cgknow + ppeduc +cathprot + (1|cserial) + (1|time), data=irelong2)
+t3mod1  <- lmer(t3 ~ I(t3controlpart==0) + female + t2cgknow + ppeduc +cathprot + (1|cserial) + (1|time), data=irelong2)
 t3mod2  <- glmer(t3 ~ I(t3controlpart==0)*time + female + t2cgknow + ppeduc +cathprot + (1|cserial) + (1|time), data=irelong2, family=poisson(link=log))
+rstanarm::stan_lmer(t3 ~ I(t3controlpart==0)*time + female + t2cgknow + ppeduc +cathprot + (1|cserial) + (1|time), data=irelong2)
 
 # TABLE 4 (part b)
-t3mod3  <- glmer(t3 ~ I(t3controlpart==0)*time + female + I(t3controlpart==0)*t2cgknow + I(t3controlpart==0)*ppeduc +I(t3controlpart==0)*cathprot + (1|cserial) + (1|time), data=subset(irelong2, !is.na(t3controlpart)))
+t3mod3  <- lmer(t3 ~ I(t3controlpart==0)*time + female + I(t3controlpart==0)*t2cgknow + I(t3controlpart==0)*ppeduc +I(t3controlpart==0)*cathprot + (1|cserial) + (1|time), data=subset(irelong2, !is.na(t3controlpart)))
 confint(t3mod3)
 confint(t3mod1)
 
 ## 
 ## Table 5: Learning of Arguments within DP 
 ## ******************************************************************** ##
-
-library(lme4)
 
 # Poissson 
 summary(glmer(t2tot  ~ female + t2cgknow + ppeduc + readbrief + genvar + grppk + cathprot + (1|grp), data=nireland, family=poisson(link = "log")))
